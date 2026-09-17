@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Network Support Toolkit</title>
+<style>
+  :root {
+    --paper: #eef1ec;
+    --ink: #1c2b23;
+    --copper: #a45a2a;
+    --copper-dark: #7c421d;
+    --line: #c7cdc2;
+    --panel: #ffffff;
+    --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+    --sans: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 48px 20px;
+  }
+
+  .sheet { width: 100%; max-width: 680px; }
+
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 12px;
+    background: #e2e7de;
+    padding: 4px;
+    border-radius: 6px;
+  }
+
+  .tab-btn {
+    flex: 1 1 30%;
+    min-width: 92px;
+    padding: 9px 8px;
+    border: none;
+    background: transparent;
+    color: #5c6a61;
+    font-family: var(--sans);
+    font-size: 12.5px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .tab-btn.active { background: var(--panel); color: var(--copper-dark); }
+
+  .plate {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 32px 32px 28px;
+    position: relative;
+  }
+
+  .plate::before {
+    content: "";
+    position: absolute;
+    top: 14px; left: 14px; right: 14px; bottom: 14px;
+    border: 1px dashed var(--line);
+    border-radius: 2px;
+    pointer-events: none;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; letter-spacing: 0.01em; }
+  .sub { font-size: 14px; color: #5c6a61; margin: 0 0 24px; line-height: 1.5; }
+
+  form { display: flex; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+
+  input[type="text"], select {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 15px;
+    letter-spacing: 0.02em;
+    padding: 11px 13px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: #fbfcfa;
+    color: var(--ink);
+    min-width: 0;
+  }
+
+  select { flex: 0 0 auto; font-family: var(--sans); font-size: 14px; }
+
+  input[type="text"]:focus, select:focus { outline: none; border-color: var(--copper); }
+  input[type="text"].invalid { border-color: #b3453a; }
+
+  button {
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 600;
+    background: var(--copper);
+    color: #fff8f0;
+    border: none;
+    border-radius: 3px;
+    padding: 0 20px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    white-space: nowrap;
+  }
+
+  button:hover { background: var(--copper-dark); }
+  button:disabled { background: #bfc4bc; cursor: default; }
+
+  .link-btn {
+    background: none;
+    border: none;
+    color: var(--copper-dark);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 6px 0 0;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .link-btn:hover { color: var(--copper); }
+
+  .hint { font-size: 12.5px; color: #7c887f; margin: 8px 0 0; min-height: 32px; line-height: 1.5; }
+  .hint.error { color: #b3453a; }
+  .hint.warn { color: #8a6d1f; }
+
+  .result { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 24px; display: none; }
+  .result.show { display: block; }
+
+  .octets { display: flex; gap: 6px; margin-bottom: 20px; font-family: var(--mono); font-size: 15px; flex-wrap: wrap; }
+  .octet { padding: 6px 10px; border-radius: 3px; background: #f1ede4; color: #8a5626; border: 1px solid #e3d9c6; }
+  .octet.oui { background: #fdf1e6; color: var(--copper-dark); border-color: #f0d9bd; font-weight: 600; }
+  .octet.nic { background: #eef1ec; color: #4a564e; border-color: var(--line); }
+
+  .field { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0; border-bottom: 1px solid #eceee9; gap: 16px; }
+  .field:last-child { border-bottom: none; }
+  .field .label { font-size: 12.5px; color: #7c887f; white-space: nowrap; }
+  .field .value { font-size: 15px; text-align: right; word-break: break-word; }
+  .field .value.vendor, .field .value.lead { font-weight: 600; font-size: 17px; }
+
+  .source-tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    margin-left: 8px;
+    background: #eef1ec;
+    color: #5c6a61;
+    font-weight: 500;
+    vertical-align: middle;
+  }
+  .source-tag.live { background: #e8f3ea; color: #2f6b3f; }
+  .source-tag.offline { background: #f6ecd9; color: #8a6d1f; }
+
+  .record-list { font-family: var(--mono); font-size: 13.5px; line-height: 1.7; background: #fbfcfa; border: 1px solid var(--line); border-radius: 3px; padding: 12px 14px; white-space: pre-wrap; word-break: break-all; }
+
+  .bl-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13.5px; border-bottom: 1px dashed #eceee9; }
+  .bl-row:last-child { border-bottom: none; }
+  .bl-tag { font-weight: 600; }
+  .bl-tag.clean { color: #2f6b3f; }
+  .bl-tag.listed { color: #b3453a; }
+  .bl-tag.unknown { color: #8a948a; }
+
+  .svc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .svc-tile { border: 1px solid var(--line); border-radius: 4px; padding: 12px; background: #fbfcfa; }
+  .svc-name { font-size: 13.5px; font-weight: 600; margin-bottom: 6px; }
+  .svc-name a { color: var(--ink); text-decoration: none; }
+  .svc-name a:hover { text-decoration: underline; }
+  .svc-status { display: flex; align-items: center; gap: 6px; font-size: 12.5px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; background: #bfc4bc; }
+  .dot.ok { background: #3f8f52; }
+  .dot.minor { background: #d3a02c; }
+  .dot.major { background: #c0503f; }
+  .dot.unknown { background: #bfc4bc; }
+
+  .info-card { background: #fbfcfa; border: 1px solid var(--line); border-radius: 4px; padding: 16px; font-size: 13.5px; line-height: 1.7; color: #4a564e; }
+  .info-card a { color: var(--copper-dark); }
+  .info-card strong { color: var(--ink); }
+
+  footer { margin-top: 20px; font-size: 12px; color: #8a948a; text-align: center; line-height: 1.6; }
+  footer a { color: var(--copper-dark); }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-btn-mac" type="button">MAC Vendor</button>
+      <button class="tab-btn" id="tab-btn-ip" type="button">IP Address</button>
+      <button class="tab-btn" id="tab-btn-domain" type="button">DNS / WHOIS</button>
+      <button class="tab-btn" id="tab-btn-bgp" type="button">BGP / ASN</button>
+      <button class="tab-btn" id="tab-btn-http" type="button">HTTP Check</button>
+      <button class="tab-btn" id="tab-btn-status" type="button">Service Status</button>
+    </div>
+
+    <div class="plate">
+
+      <!-- ============ MAC VENDOR PANEL ============ -->
+      <div class="panel active" id="panel-mac">
+        <h1>MAC Vendor Lookup</h1>
+        <p class="sub">Enter a MAC address to identify the manufacturer registered against its OUI (the first three octets).</p>
+
+        <form id="mac-form" autocomplete="off">
+          <input type="text" id="mac-input" placeholder="e.g. 3C:5A:B4:1F:20:9C" maxlength="17" spellcheck="false" />
+          <button type="submit">Look up</button>
+        </form>
+        <p class="hint" id="mac-hint"></p>
+
+        <div class="result" id="mac-result">
+          <div class="octets" id="mac-octets"></div>
+          <div class="field">
+            <span class="label">Vendor</span>
+            <span class="value vendor" id="mac-val-vendor">—<span class="source-tag" id="mac-source-tag" style="display:none;"></span></span>
+          </div>
+          <div class="field"><span class="label">OUI</span><span class="value" id="mac-val-oui">—</span></div>
+          <div class="field"><span class="label">Full address</span><span class="value" id="mac-val-full">—</span></div>
+        </div>
+      </div>
+
+      <!-- ============ IP ADDRESS PANEL ============ -->
+      <div class="panel" id="panel-ip">
+        <h1>IP Address Lookup</h1>
+        <p class="sub">Enter an IPv4 or IPv6 address for geolocation, network ownership, reverse DNS, and spam-blacklist status.</p>
+
+        <form id="ip-form" autocomplete="off">
+          <input type="text" id="ip-input" placeholder="e.g. 8.8.8.8 or 2606:4700:4700::1111" spellcheck="false" />
+          <button type="submit">Look up</button>
+        </form>
+        <button type="button" class="link-btn" id="use-my-ip">Use my IP address</button>
+        <p class="hint" id="ip-hint"></p>
+
+        <div class="result" id="ip-result">
+          <div class="field">
+            <span class="label">IP address</span>
+            <span class="value lead" id="ip-val-addr">—<span class="source-tag" id="ip-source-tag" style="display:none;"></span></span>
+          </div>
+          <div class="field"><span class="label">Reverse DNS</span><span class="value" id="ip-val-ptr">—</span></div>
+          <div class="field"><span class="label">Location</span><span class="value" id="ip-val-location">—</span></div>
+          <div class="field"><span class="label">Network / ISP</span><span class="value" id="ip-val-org">—</span></div>
+          <div class="field"><span class="label">ASN</span><span class="value" id="ip-val-asn">—</span></div>
+          <div class="field"><span class="label">Timezone</span><span class="value" id="ip-val-tz">—</span></div>
+          <div class="field" style="display:block;">
+            <span class="label">Blacklist (DNSBL) status</span>
+            <div id="ip-val-bl" style="margin-top:8px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ DNS / WHOIS PANEL ============ -->
+      <div class="panel" id="panel-domain">
+        <h1>DNS &amp; Domain (RDAP/WHOIS) Lookup</h1>
+        <p class="sub">Enter a domain to query a DNS record type and pull its registration data.</p>
+
+        <form id="domain-form" autocomplete="off">
+          <input type="text" id="domain-input" placeholder="e.g. example.com" spellcheck="false" />
+          <select id="domain-rtype">
+            <option value="A">A</option>
+            <option value="AAAA">AAAA</option>
+            <option value="MX">MX</option>
+            <option value="TXT">TXT</option>
+            <option value="NS">NS</option>
+            <option value="CNAME">CNAME</option>
+            <option value="SOA">SOA</option>
+            <option value="CAA">CAA</option>
+          </select>
+          <button type="submit">Look up</button>
+        </form>
+        <p class="hint" id="domain-hint"></p>
+
+        <div class="result" id="domain-result">
+          <div class="field" style="display:block;">
+            <span class="label">DNS records <span id="domain-rtype-label"></span></span>
+            <div class="record-list" id="domain-records" style="margin-top:8px;">—</div>
+          </div>
+          <div class="field"><span class="label">Registrar</span><span class="value" id="domain-registrar">—</span></div>
+          <div class="field"><span class="label">Registered</span><span class="value" id="domain-created">—</span></div>
+          <div class="field"><span class="label">Expires</span><span class="value" id="domain-expires">—</span></div>
+          <div class="field"><span class="label">Domain status</span><span class="value" id="domain-status">—</span></div>
+          <div class="field"><span class="label">Name servers</span><span class="value" id="domain-ns">—</span></div>
+        </div>
+      </div>
+
+      <!-- ============ BGP / ASN PANEL ============ -->
+      <div class="panel" id="panel-bgp">
+        <h1>BGP / ASN Lookup</h1>
+        <p class="sub">Enter an IP address or ASN (e.g. AS15169) to see routing/ownership info and an abuse contact, via RIPEstat.</p>
+
+        <form id="bgp-form" autocomplete="off">
+          <input type="text" id="bgp-input" placeholder="e.g. 8.8.8.8 or AS15169" spellcheck="false" />
+          <button type="submit">Look up</button>
+        </form>
+        <p class="hint" id="bgp-hint"></p>
+
+        <div class="result" id="bgp-result">
+          <div class="field"><span class="label">Query type</span><span class="value" id="bgp-type">—</span></div>
+          <div class="field"><span class="label">Holder / Organization</span><span class="value lead" id="bgp-holder">—</span></div>
+          <div class="field"><span class="label">Resource</span><span class="value" id="bgp-resource">—</span></div>
+          <div class="field"><span class="label">Announced</span><span class="value" id="bgp-announced">—</span></div>
+          <div class="field" id="bgp-prefixes-row" style="display:none;">
+            <span class="label">Announced prefixes</span>
+            <span class="value" id="bgp-prefixes">—</span>
+          </div>
+          <div class="field"><span class="label">Abuse contact</span><span class="value" id="bgp-abuse">—</span></div>
+        </div>
+      </div>
+
+      <!-- ============ HTTP CHECK PANEL ============ -->
+      <div class="panel" id="panel-http">
+        <h1>HTTP Reachability &amp; Latency</h1>
+        <p class="sub">Checks whether a URL is reachable from your browser right now, and roughly how long it takes to respond.</p>
+
+        <form id="http-form" autocomplete="off">
+          <input type="text" id="http-input" placeholder="e.g. https://example.com" spellcheck="false" />
+          <button type="submit">Check</button>
+        </form>
+        <p class="hint" id="http-hint"></p>
+
+        <div class="result" id="http-result">
+          <div class="field"><span class="label">Reachable</span><span class="value lead" id="http-reachable">—</span></div>
+          <div class="field"><span class="label">HTTP status</span><span class="value" id="http-status">—</span></div>
+          <div class="field"><span class="label">Response time</span><span class="value" id="http-time">—</span></div>
+        </div>
+      </div>
+
+      <!-- ============ SERVICE STATUS PANEL ============ -->
+      <div class="panel" id="panel-status">
+        <h1>Service Status ("Is it down?")</h1>
+        <p class="sub">Live status pulled directly from each provider's own public status page API.</p>
+
+        <div class="svc-grid" id="svc-grid"></div>
+
+        <div style="margin-top:24px; border-top:1px solid var(--line); padding-top:20px;">
+          <div class="field" style="display:block; border-bottom:none; padding-top:0;">
+            <span class="label" style="display:block; margin-bottom:8px;">Subsea cable outages</span>
+            <div class="info-card">
+              There's no free, live API for subsea cable fault status — this isn't something a static page can reliably check, so rather than fake it, here are the real sources network engineers actually use:
+              <br /><br />
+              <strong>TeleGeography Submarine Cable Map</strong> — reference map of global cable routes: <a href="https://www.submarinecablemap.com" target="_blank" rel="noopener">submarinecablemap.com</a><br />
+              <strong>Cloudflare Radar Outage Center</strong> — tracks significant internet disruptions, including some cable-related events: <a href="https://radar.cloudflare.com/outage-center" target="_blank" rel="noopener">radar.cloudflare.com/outage-center</a><br />
+              <strong>ISOC Pulse</strong> — internet resilience &amp; shutdown tracking: <a href="https://pulse.internetsociety.org" target="_blank" rel="noopener">pulse.internetsociety.org</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <footer id="footer-text"></footer>
+  </div>
+
+<script>
+(function () {
+  /* ---------------------------------------------------------------- */
+  /* Tabs                                                              */
+  /* ---------------------------------------------------------------- */
+  const TAB_NAMES = ['mac', 'ip', 'domain', 'bgp', 'http', 'status'];
+  const tabButtons = {}, panels = {};
+  TAB_NAMES.forEach((k) => {
+    tabButtons[k] = document.getElementById('tab-btn-' + k);
+    panels[k] = document.getElementById('panel-' + k);
+  });
+
+  const FOOTER_TEXT = {
+    mac: 'Looks up a live registry first, falling back to a cached open-source OUI dataset (<a href="https://github.com/Ringmast4r/OUI-Master-Database" target="_blank" rel="noopener">Ringmast4r/OUI-Master-Database</a>) if unreachable.',
+    ip: 'Geolocation via <a href="https://ipapi.co" target="_blank" rel="noopener">ipapi.co</a> / <a href="https://ipwho.is" target="_blank" rel="noopener">ipwho.is</a>. Reverse DNS &amp; blacklist checks via Google &amp; Cloudflare public DNS-over-HTTPS.',
+    domain: 'DNS via Google/Cloudflare DNS-over-HTTPS. Registration data via the <a href="https://about.rdap.org" target="_blank" rel="noopener">rdap.org</a> public bootstrap service.',
+    bgp: 'Routing and ownership data via the free <a href="https://stat.ripe.net" target="_blank" rel="noopener">RIPEstat</a> public API.',
+    http: 'Runs entirely in your browser. Status codes are only visible for targets that allow cross-origin reads (CORS) — otherwise this can only confirm reachability and timing.',
+    status: 'Pulled live from each provider\'s own public status page API. A tile reading "unable to check" means the request was blocked here, not that the service is down.'
+  };
+  const footerEl = document.getElementById('footer-text');
+
+  function activateTab(name) {
+    TAB_NAMES.forEach((k) => {
+      tabButtons[k].classList.toggle('active', k === name);
+      panels[k].classList.toggle('active', k === name);
+    });
+    footerEl.innerHTML = FOOTER_TEXT[name];
+    if (name === 'status') loadServiceStatuses();
+  }
+  TAB_NAMES.forEach((k) => tabButtons[k].addEventListener('click', () => activateTab(k)));
+  footerEl.innerHTML = FOOTER_TEXT.mac;
+
+  /* ---------------------------------------------------------------- */
+  /* Shared DNS-over-HTTPS helper                                      */
+  /* ---------------------------------------------------------------- */
+  async function dohQuery(name, type) {
+    const resolvers = [
+      { url: 'https://dns.google/resolve?name=' + encodeURIComponent(name) + '&type=' + type, headers: {} },
+      { url: 'https://cloudflare-dns.com/dns-query?name=' + encodeURIComponent(name) + '&type=' + type, headers: { Accept: 'application/dns-json' } }
+    ];
+    for (const r of resolvers) {
+      try {
+        const res = await fetch(r.url, { headers: r.headers });
+        if (!res.ok) continue;
+        return { data: await res.json(), reachedNetwork: true };
+      } catch (err) { /* try next resolver */ }
+    }
+    return { data: null, reachedNetwork: false };
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* MAC Vendor Lookup                                                 */
+  /* ---------------------------------------------------------------- */
+  const macForm = document.getElementById('mac-form');
+  const macInput = document.getElementById('mac-input');
+  const macHint = document.getElementById('mac-hint');
+  const macResult = document.getElementById('mac-result');
+  const macOctets = document.getElementById('mac-octets');
+  const macValVendor = document.getElementById('mac-val-vendor');
+  const macValOui = document.getElementById('mac-val-oui');
+  const macValFull = document.getElementById('mac-val-full');
+  const macSourceTag = document.getElementById('mac-source-tag');
+
+  const MAC_FALLBACK_DB = {
+    'F0:EE:7A': 'Apple, Inc.', 'A4:FC:14': 'Apple, Inc.', '58:AD:12': 'Apple, Inc.',
+    'E0:06:30': 'Huawei Technologies Co.,Ltd', 'CC:EB:5E': 'Xiaomi Communications Co Ltd',
+    'E4:C7:67': 'Intel Corporate', '64:4E:D7': 'HP Inc.', 'D0:43:1E': 'Dell Inc.',
+    '00:C0:4F': 'Dell Inc.', 'E8:0A:B9': 'Cisco Systems, Inc', '9C:E3:30': 'Cisco Meraki',
+    'E4:F2:7C': 'Juniper Networks', 'F8:0D:A9': 'Zyxel Communications Corporation',
+    '60:15:2B': 'Palo Alto Networks', 'FC:59:C0': 'Arista Networks', 'D4:BD:4F': 'Ruckus Wireless',
+    'F0:9F:C2': 'Ubiquiti Inc', '78:8A:20': 'Ubiquiti Inc', '74:78:A6': 'Fortinet, Inc.',
+    '60:70:6C': 'Google, Inc.', 'C8:2A:DD': 'Google, Inc.', '70:F8:AE': 'Microsoft Corporation',
+    'D4:8A:FC': 'Espressif Inc.', 'E4:65:B8': 'Espressif Inc.', 'D8:3A:DD': 'Raspberry Pi Trading Ltd',
+    'AC:5A:F0': 'LG Electronics', 'AC:80:0A': 'Sony Corporation', 'F4:64:12': 'Sony Interactive Entertainment Inc.',
+    '60:1A:C7': 'Nintendo Co.,Ltd', '00:62:0B': 'Broadcom Limited', '40:F3:B0': 'Texas Instruments',
+    '04:57:47': 'GoPro', 'D4:2C:46': 'Buffalo.Inc', 'F0:1B:24': 'zte corporation'
+  };
+
+  const COMMUNITY_DB_URL = 'https://raw.githubusercontent.com/Ringmast4r/OUI-Master-Database/master/LISTS/master_oui.csv';
+  let communityDbPromise = null;
+
+  function normalizeMac(raw) {
+    const hex = raw.replace(/[^0-9a-fA-F]/g, '').toUpperCase();
+    if (hex.length !== 12) return null;
+    return hex.match(/.{1,2}/g).join(':');
+  }
+
+  function renderOctets(mac) {
+    macOctets.innerHTML = '';
+    mac.split(':').forEach((byte, i) => {
+      const span = document.createElement('span');
+      span.className = 'octet ' + (i < 3 ? 'oui' : 'nic');
+      span.textContent = byte;
+      macOctets.appendChild(span);
+    });
+  }
+
+  function setMacHint(msg, kind) {
+    macHint.textContent = msg || '';
+    macHint.classList.toggle('error', kind === 'error');
+    macHint.classList.toggle('warn', kind === 'warn');
+  }
+
+  function parseCsvLine(line) {
+    const firstComma = line.indexOf(',');
+    if (firstComma === -1) return null;
+    const oui = line.slice(0, firstComma).trim().toUpperCase();
+    if (!/^[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}$/.test(oui)) return null;
+    let rest = line.slice(firstComma + 1);
+    let manufacturer;
+    if (rest.startsWith('"')) {
+      const end = rest.indexOf('",');
+      manufacturer = rest.slice(1, end === -1 ? rest.length - 1 : end);
+    } else {
+      const next = rest.indexOf(',');
+      manufacturer = next === -1 ? rest : rest.slice(0, next);
+    }
+    return [oui, manufacturer.trim()];
+  }
+
+  function loadCommunityDb() {
+    if (communityDbPromise) return communityDbPromise;
+    communityDbPromise = fetch(COMMUNITY_DB_URL)
+      .then((res) => { if (!res.ok) throw new Error('status ' + res.status); return res.text(); })
+      .then((text) => {
+        const map = new Map();
+        const lines = text.split('\n');
+        for (let i = 1; i < lines.length; i++) {
+          const row = parseCsvLine(lines[i]);
+          if (row) map.set(row[0], row[1]);
+        }
+        return map;
+      });
+    return communityDbPromise;
+  }
+
+  async function lookupMacVendor(mac) {
+    const oui = mac.split(':').slice(0, 3).join(':');
+    let reachedNetwork = false;
+    try {
+      const res = await fetch('https://api.macvendors.com/' + encodeURIComponent(mac));
+      reachedNetwork = true;
+      if (res.ok) {
+        const text = (await res.text()).trim();
+        if (text) return { vendor: text, source: 'live', reachedNetwork };
+      }
+    } catch (err) { /* fall through */ }
+    try {
+      const db = await loadCommunityDb();
+      reachedNetwork = true;
+      if (db.has(oui)) return { vendor: db.get(oui), source: 'community', reachedNetwork };
+    } catch (err) { /* fall through */ }
+    if (MAC_FALLBACK_DB[oui]) return { vendor: MAC_FALLBACK_DB[oui], source: 'offline', reachedNetwork };
+    return { vendor: null, source: null, reachedNetwork };
+  }
+
+  macForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const mac = normalizeMac(macInput.value);
+    macInput.classList.toggle('invalid', !mac);
+    if (!mac) {
+      setMacHint('Enter a full 6-byte MAC address, e.g. 3C:5A:B4:1F:20:9C', 'error');
+      macResult.classList.remove('show');
+      return;
+    }
+    setMacHint('Looking up…');
+    macSourceTag.style.display = 'none';
+    try {
+      const { vendor, source, reachedNetwork } = await lookupMacVendor(mac);
+      renderOctets(mac);
+      macValOui.textContent = mac.split(':').slice(0, 3).join(':');
+      macValFull.textContent = mac;
+      macResult.classList.add('show');
+      if (vendor) {
+        macValVendor.firstChild.textContent = vendor;
+        if (source === 'offline') {
+          macSourceTag.textContent = 'offline reference';
+          macSourceTag.className = 'source-tag offline';
+          macSourceTag.style.display = 'inline-block';
+          setMacHint('Matched from a small built-in reference list, not a live lookup.', 'warn');
+        } else {
+          macSourceTag.textContent = source === 'live' ? 'live' : 'community dataset';
+          macSourceTag.className = 'source-tag live';
+          macSourceTag.style.display = 'inline-block';
+          setMacHint('');
+        }
+      } else if (reachedNetwork) {
+        macValVendor.firstChild.textContent = 'Not found in registry';
+        setMacHint('No manufacturer is registered for this OUI — it may be unassigned, locally administered, or randomized.');
+      } else {
+        macValVendor.firstChild.textContent = 'Lookup unavailable';
+        setMacHint('Live lookup services could not be reached from here — this page may be sandboxed or offline.', 'warn');
+      }
+    } catch (err) {
+      setMacHint('Something unexpected went wrong: ' + (err.message || err), 'error');
+    }
+  });
+  macInput.addEventListener('input', () => macInput.classList.remove('invalid'));
+
+  /* ---------------------------------------------------------------- */
+  /* IP validation helpers (shared)                                    */
+  /* ---------------------------------------------------------------- */
+  const IPV4_RE = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+  const IPV6_RE = /^[0-9a-fA-F:]+:[0-9a-fA-F:]*$/;
+
+  function isValidIpv4(ip) {
+    const m = ip.match(IPV4_RE);
+    if (!m) return false;
+    return m.slice(1).every((part) => {
+      if (part.length > 1 && part[0] === '0') return false;
+      const n = Number(part);
+      return n >= 0 && n <= 255;
+    });
+  }
+
+  function isValidIpv6(ip) {
+    if (!IPV6_RE.test(ip)) return false;
+    if (ip.indexOf(':') === -1) return false;
+    const doubleColonCount = (ip.match(/::/g) || []).length;
+    if (doubleColonCount > 1) return false;
+    const groups = ip.split(':');
+    if (groups.length > 8) return false;
+    return groups.every((g) => g === '' || /^[0-9a-fA-F]{1,4}$/.test(g));
+  }
+
+  function expandIpv6(addr) {
+    let head = addr, tail = '';
+    if (addr.indexOf('::') !== -1) {
+      const parts = addr.split('::');
+      head = parts[0]; tail = parts[1] || '';
+    }
+    const headParts = head ? head.split(':').filter((p) => p !== '') : [];
+    const tailParts = tail ? tail.split(':').filter((p) => p !== '') : [];
+    let allParts;
+    if (addr.indexOf('::') !== -1) {
+      const missing = 8 - headParts.length - tailParts.length;
+      const zeros = new Array(Math.max(missing, 0)).fill('0');
+      allParts = headParts.concat(zeros, tailParts);
+    } else {
+      allParts = addr.split(':');
+    }
+    return allParts.map((p) => p.padStart(4, '0')).join('');
+  }
+
+  function buildPtrName(ip) {
+    if (isValidIpv4(ip)) return ip.split('.').reverse().join('.') + '.in-addr.arpa';
+    const expanded = expandIpv6(ip);
+    return expanded.split('').reverse().join('.') + '.ip6.arpa';
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* IP Address + Reverse DNS + DNSBL Lookup                           */
+  /* ---------------------------------------------------------------- */
+  const ipForm = document.getElementById('ip-form');
+  const ipInput = document.getElementById('ip-input');
+  const ipHint = document.getElementById('ip-hint');
+  const ipResult = document.getElementById('ip-result');
+  const ipValAddr = document.getElementById('ip-val-addr');
+  const ipValPtr = document.getElementById('ip-val-ptr');
+  const ipValLocation = document.getElementById('ip-val-location');
+  const ipValOrg = document.getElementById('ip-val-org');
+  const ipValAsn = document.getElementById('ip-val-asn');
+  const ipValTz = document.getElementById('ip-val-tz');
+  const ipValBl = document.getElementById('ip-val-bl');
+  const ipSourceTag = document.getElementById('ip-source-tag');
+  const useMyIpBtn = document.getElementById('use-my-ip');
+
+  function setIpHint(msg, kind) {
+    ipHint.textContent = msg || '';
+    ipHint.classList.toggle('error', kind === 'error');
+    ipHint.classList.toggle('warn', kind === 'warn');
+  }
+
+  async function reverseDnsLookup(ip) {
+    const ptrName = buildPtrName(ip);
+    const { data, reachedNetwork } = await dohQuery(ptrName, 'PTR');
+    if (!reachedNetwork) return { names: [], reachedNetwork: false };
+    if (data && data.Answer && data.Answer.length) {
+      const names = data.Answer.filter((a) => a.type === 12).map((a) => a.data.replace(/\.$/, ''));
+      return { names, reachedNetwork: true };
+    }
+    return { names: [], reachedNetwork: true };
+  }
+
+  const DNSBL_ZONES = [
+    { name: 'Spamhaus ZEN', zone: 'zen.spamhaus.org' },
+    { name: 'SpamCop', zone: 'bl.spamcop.net' },
+    { name: 'Barracuda', zone: 'b.barracudacentral.org' },
+    { name: 'SORBS', zone: 'dnsbl.sorbs.net' }
+  ];
+
+  async function checkBlacklists(ip) {
+    if (!isValidIpv4(ip)) return { supported: false, results: [] };
+    const reversed = ip.split('.').reverse().join('.');
+    const results = await Promise.all(DNSBL_ZONES.map(async (z) => {
+      const { data, reachedNetwork } = await dohQuery(reversed + '.' + z.zone, 'A');
+      if (!reachedNetwork) return { name: z.name, listed: null };
+      return { name: z.name, listed: !!(data && data.Answer && data.Answer.length) };
+    }));
+    return { supported: true, results };
+  }
+
+  async function geoLookup(ip) {
+    const sources = [
+      { url: 'https://ipapi.co/' + encodeURIComponent(ip) + '/json/', parse: (d) => d.error ? null : { location: [d.city, d.region, d.country_name].filter(Boolean).join(', '), org: d.org || null, asn: d.asn || null, timezone: d.timezone || null } },
+      { url: 'https://ipwho.is/' + encodeURIComponent(ip), parse: (d) => !d.success ? null : { location: [d.city, d.region, d.country].filter(Boolean).join(', '), org: (d.connection && (d.connection.isp || d.connection.org)) || null, asn: d.connection && d.connection.asn ? 'AS' + d.connection.asn : null, timezone: d.timezone && d.timezone.id ? d.timezone.id : null } }
+    ];
+    for (const src of sources) {
+      try {
+        const res = await fetch(src.url);
+        if (!res.ok) continue;
+        const data = await res.json();
+        const parsed = src.parse(data);
+        if (parsed) return { ...parsed, reachedNetwork: true };
+        return { location: null, org: null, asn: null, timezone: null, reachedNetwork: true };
+      } catch (err) { /* try next source */ }
+    }
+    return { location: null, org: null, asn: null, timezone: null, reachedNetwork: false };
+  }
+
+  function renderBlacklist(bl) {
+    ipValBl.innerHTML = '';
+    if (!bl.supported) {
+      ipValBl.innerHTML = '<div class="bl-row"><span>IPv6 addresses aren\'t checked (DNSBLs are IPv4-only)</span></div>';
+      return;
+    }
+    bl.results.forEach((r) => {
+      const row = document.createElement('div');
+      row.className = 'bl-row';
+      const tagClass = r.listed === null ? 'unknown' : (r.listed ? 'listed' : 'clean');
+      const tagText = r.listed === null ? 'Unknown' : (r.listed ? 'Listed' : 'Not listed');
+      row.innerHTML = '<span>' + r.name + '</span><span class="bl-tag ' + tagClass + '">' + tagText + '</span>';
+      ipValBl.appendChild(row);
+    });
+  }
+
+  async function runIpLookup(ip) {
+    setIpHint('Looking up…');
+    ipSourceTag.style.display = 'none';
+    ipResult.classList.remove('show');
+
+    const [geo, ptr, bl] = await Promise.all([geoLookup(ip), reverseDnsLookup(ip), checkBlacklists(ip)]);
+
+    ipValAddr.firstChild.textContent = ip;
+    ipValPtr.textContent = ptr.names.length ? ptr.names.join(', ') : (ptr.reachedNetwork ? 'No PTR record found' : 'Unavailable');
+    ipValLocation.textContent = geo.location || (geo.reachedNetwork ? 'Not available' : 'Unavailable');
+    ipValOrg.textContent = geo.org || (geo.reachedNetwork ? 'Not available' : 'Unavailable');
+    ipValAsn.textContent = geo.asn || (geo.reachedNetwork ? 'Not available' : 'Unavailable');
+    ipValTz.textContent = geo.timezone || (geo.reachedNetwork ? 'Not available' : 'Unavailable');
+    renderBlacklist(bl);
+    ipResult.classList.add('show');
+
+    if (!geo.reachedNetwork && !ptr.reachedNetwork) {
+      setIpHint('Lookup services could not be reached from here — this page may be sandboxed or offline.', 'warn');
+    } else if (!geo.location && !geo.org) {
+      setIpHint('Geolocation data was not available for this address (it may be reserved, private, or unrouted).', 'warn');
+    } else {
+      setIpHint('');
+    }
+  }
+
+  ipForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const ip = ipInput.value.trim();
+    const valid = isValidIpv4(ip) || isValidIpv6(ip);
+    ipInput.classList.toggle('invalid', !valid);
+    if (!valid) {
+      setIpHint('Enter a valid IPv4 (e.g. 8.8.8.8) or IPv6 (e.g. 2606:4700:4700::1111) address.', 'error');
+      ipResult.classList.remove('show');
+      return;
+    }
+    runIpLookup(ip);
+  });
+  ipInput.addEventListener('input', () => ipInput.classList.remove('invalid'));
+
+  async function detectMyIp() {
+    const sources = [
+      { url: 'https://api.ipify.org?format=json', extract: (d) => d.ip },
+      { url: 'https://ipapi.co/json/', extract: (d) => d.ip },
+      { url: 'https://ipwho.is/', extract: (d) => (d.success ? d.ip : null) }
+    ];
+    for (const src of sources) {
+      try {
+        const res = await fetch(src.url);
+        if (!res.ok) continue;
+        const data = await res.json();
+        const ip = src.extract(data);
+        if (ip) return ip;
+      } catch (err) { /* try next source */ }
+    }
+    return null;
+  }
+
+  useMyIpBtn.addEventListener('click', async () => {
+    setIpHint('Detecting your IP…');
+    const ip = await detectMyIp();
+    if (ip) {
+      ipInput.value = ip;
+      ipInput.classList.remove('invalid');
+      runIpLookup(ip);
+    } else {
+      setIpHint('Could not auto-detect your IP from here — all detection services were unreachable. Try entering one manually.', 'error');
+    }
+  });
+
+  /* ---------------------------------------------------------------- */
+  /* DNS Records + RDAP/WHOIS                                          */
+  /* ---------------------------------------------------------------- */
+  const domainForm = document.getElementById('domain-form');
+  const domainInput = document.getElementById('domain-input');
+  const domainRtype = document.getElementById('domain-rtype');
+  const domainHint = document.getElementById('domain-hint');
+  const domainResult = document.getElementById('domain-result');
+  const domainRecords = document.getElementById('domain-records');
+  const domainRtypeLabel = document.getElementById('domain-rtype-label');
+  const domainRegistrar = document.getElementById('domain-registrar');
+  const domainCreated = document.getElementById('domain-created');
+  const domainExpires = document.getElementById('domain-expires');
+  const domainStatus = document.getElementById('domain-status');
+  const domainNs = document.getElementById('domain-ns');
+
+  function setDomainHint(msg, kind) {
+    domainHint.textContent = msg || '';
+    domainHint.classList.toggle('error', kind === 'error');
+    domainHint.classList.toggle('warn', kind === 'warn');
+  }
+
+  function isValidDomain(d) {
+    return /^(?!-)[a-zA-Z0-9-]{1,63}(?<!-)(\.(?!-)[a-zA-Z0-9-]{1,63}(?<!-))+$/.test(d);
+  }
+
+  const DNS_TYPE_NUM = { A: 1, NS: 2, CNAME: 5, SOA: 6, MX: 15, TXT: 16, AAAA: 28, CAA: 257 };
+
+  async function lookupDnsRecords(domain, type) {
+    const { data, reachedNetwork } = await dohQuery(domain, type);
+    if (!reachedNetwork) return { lines: null, reachedNetwork: false };
+    if (!data || !data.Answer || !data.Answer.length) return { lines: [], reachedNetwork: true };
+    const wanted = DNS_TYPE_NUM[type];
+    const lines = data.Answer
+      .filter((a) => a.type === wanted)
+      .map((a) => {
+        let val = a.data;
+        if (type === 'TXT') val = val.replace(/^"|"$/g, '');
+        return val + '   (TTL ' + a.TTL + 's)';
+      });
+    return { lines, reachedNetwork: true };
+  }
+
+  async function lookupRdap(domain) {
+    try {
+      const res = await fetch('https://rdap.org/domain/' + encodeURIComponent(domain));
+      if (!res.ok) return { ok: false, reachedNetwork: true };
+      const data = await res.json();
+      let registrar = null;
+      if (data.entities) {
+        const reg = data.entities.find((e) => e.roles && e.roles.includes('registrar'));
+        if (reg && reg.vcardArray && reg.vcardArray[1]) {
+          const fn = reg.vcardArray[1].find((f) => f[0] === 'fn');
+          if (fn) registrar = fn[3];
+        }
+      }
+      let created = null, expires = null;
+      if (data.events) {
+        const ce = data.events.find((e) => e.eventAction === 'registration');
+        const ee = data.events.find((e) => e.eventAction === 'expiration');
+        if (ce) created = ce.eventDate.slice(0, 10);
+        if (ee) expires = ee.eventDate.slice(0, 10);
+      }
+      const status = data.status && data.status.length ? data.status.join(', ') : null;
+      const ns = data.nameservers && data.nameservers.length ? data.nameservers.map((n) => n.ldhName).join(', ') : null;
+      return { ok: true, registrar, created, expires, status, ns, reachedNetwork: true };
+    } catch (err) {
+      return { ok: false, reachedNetwork: false };
+    }
+  }
+
+  domainForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const domain = domainInput.value.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    const type = domainRtype.value;
+    domainInput.classList.toggle('invalid', !isValidDomain(domain));
+    if (!isValidDomain(domain)) {
+      setDomainHint('Enter a valid domain, e.g. example.com', 'error');
+      domainResult.classList.remove('show');
+      return;
+    }
+    setDomainHint('Looking up…');
+    domainRtypeLabel.textContent = '(' + type + ')';
+    domainRecords.textContent = 'Looking up…';
+    domainResult.classList.add('show');
+
+    const [dns, rdap] = await Promise.all([lookupDnsRecords(domain, type), lookupRdap(domain)]);
+
+    if (dns.lines === null) {
+      domainRecords.textContent = 'Unavailable — DNS resolvers unreachable from here.';
+    } else if (dns.lines.length === 0) {
+      domainRecords.textContent = 'No ' + type + ' records found.';
+    } else {
+      domainRecords.textContent = dns.lines.join('\n');
+    }
+
+    if (rdap.ok) {
+      domainRegistrar.textContent = rdap.registrar || 'Not available';
+      domainCreated.textContent = rdap.created || 'Not available';
+      domainExpires.textContent = rdap.expires || 'Not available';
+      domainStatus.textContent = rdap.status || 'Not available';
+      domainNs.textContent = rdap.ns || 'Not available';
+      setDomainHint('');
+    } else if (rdap.reachedNetwork) {
+      domainRegistrar.textContent = domainCreated.textContent = domainExpires.textContent = domainStatus.textContent = domainNs.textContent = 'Not found';
+      setDomainHint('No RDAP registration record found for this domain.', 'warn');
+    } else {
+      domainRegistrar.textContent = domainCreated.textContent = domainExpires.textContent = domainStatus.textContent = domainNs.textContent = 'Unavailable';
+      setDomainHint('Registration lookup was blocked here (often a CORS restriction from the registry server). Open it directly: rdap.org/domain/' + domain, 'warn');
+    }
+  });
+  domainInput.addEventListener('input', () => domainInput.classList.remove('invalid'));
+
+  /* ---------------------------------------------------------------- */
+  /* BGP / ASN (RIPEstat)                                              */
+  /* ---------------------------------------------------------------- */
+  const bgpForm = document.getElementById('bgp-form');
+  const bgpInput = document.getElementById('bgp-input');
+  const bgpHint = document.getElementById('bgp-hint');
+  const bgpResult = document.getElementById('bgp-result');
+  const bgpType = document.getElementById('bgp-type');
+  const bgpHolder = document.getElementById('bgp-holder');
+  const bgpResource = document.getElementById('bgp-resource');
+  const bgpAnnounced = document.getElementById('bgp-announced');
+  const bgpPrefixesRow = document.getElementById('bgp-prefixes-row');
+  const bgpPrefixes = document.getElementById('bgp-prefixes');
+  const bgpAbuse = document.getElementById('bgp-abuse');
+
+  function setBgpHint(msg, kind) {
+    bgpHint.textContent = msg || '';
+    bgpHint.classList.toggle('error', kind === 'error');
+    bgpHint.classList.toggle('warn', kind === 'warn');
+  }
+
+  async function ripestat(path, resource) {
+    const res = await fetch('https://stat.ripe.net/data/' + path + '/data.json?resource=' + encodeURIComponent(resource));
+    if (!res.ok) throw new Error('status ' + res.status);
+    return res.json();
+  }
+
+  bgpForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const raw = bgpInput.value.trim();
+    const isAsn = /^(AS)?\d+$/i.test(raw);
+    if (!raw || (!isAsn && !isValidIpv4(raw) && !isValidIpv6(raw))) {
+      bgpInput.classList.add('invalid');
+      setBgpHint('Enter an IP address or an ASN, e.g. AS15169', 'error');
+      bgpResult.classList.remove('show');
+      return;
+    }
+    bgpInput.classList.remove('invalid');
+    setBgpHint('Looking up…');
+    bgpPrefixesRow.style.display = 'none';
+
+    try {
+      if (isAsn) {
+        const asn = /^AS/i.test(raw) ? raw.toUpperCase() : 'AS' + raw;
+        const [overview, prefixes, abuse] = await Promise.allSettled([
+          ripestat('as-overview', asn),
+          ripestat('announced-prefixes', asn),
+          ripestat('abuse-contact-finder', asn)
+        ]);
+        bgpType.textContent = 'ASN';
+        bgpResource.textContent = asn;
+        if (overview.status === 'fulfilled') {
+          const d = overview.value.data;
+          bgpHolder.textContent = d.holder || 'Not available';
+          bgpAnnounced.textContent = d.announced ? 'Yes' : 'No';
+        } else {
+          bgpHolder.textContent = 'Unavailable'; bgpAnnounced.textContent = 'Unavailable';
+        }
+        if (prefixes.status === 'fulfilled') {
+          const list = prefixes.value.data.prefixes || [];
+          bgpPrefixesRow.style.display = 'flex';
+          bgpPrefixes.textContent = list.length ? (list.length + ' total — e.g. ' + list.slice(0, 5).map((p) => p.prefix).join(', ')) : 'None found';
+        }
+        if (abuse.status === 'fulfilled') {
+          const contacts = abuse.value.data.abuse_contacts || [];
+          bgpAbuse.textContent = contacts.length ? contacts.join(', ') : 'Not available';
+        } else {
+          bgpAbuse.textContent = 'Unavailable';
+        }
+      } else {
+        const [overview, abuse] = await Promise.allSettled([
+          ripestat('prefix-overview', raw),
+          ripestat('abuse-contact-finder', raw)
+        ]);
+        bgpType.textContent = 'IP address';
+        if (overview.status === 'fulfilled') {
+          const d = overview.value.data;
+          bgpResource.textContent = d.resource || raw;
+          bgpAnnounced.textContent = d.announced ? 'Yes' : 'No';
+          bgpHolder.textContent = (d.asns && d.asns.length) ? d.asns.map((a) => 'AS' + a.asn + ' (' + a.holder + ')').join(', ') : 'Not announced / not available';
+        } else {
+          bgpResource.textContent = raw; bgpHolder.textContent = 'Unavailable'; bgpAnnounced.textContent = 'Unavailable';
+        }
+        if (abuse.status === 'fulfilled') {
+          const contacts = abuse.value.data.abuse_contacts || [];
+          bgpAbuse.textContent = contacts.length ? contacts.join(', ') : 'Not available';
+        } else {
+          bgpAbuse.textContent = 'Unavailable';
+        }
+      }
+      bgpResult.classList.add('show');
+      setBgpHint('');
+    } catch (err) {
+      bgpResult.classList.remove('show');
+      setBgpHint('RIPEstat could not be reached from here — this page may be sandboxed or offline.', 'warn');
+    }
+  });
+  bgpInput.addEventListener('input', () => bgpInput.classList.remove('invalid'));
+
+  /* ---------------------------------------------------------------- */
+  /* HTTP Reachability + Latency                                       */
+  /* ---------------------------------------------------------------- */
+  const httpForm = document.getElementById('http-form');
+  const httpInput = document.getElementById('http-input');
+  const httpHint = document.getElementById('http-hint');
+  const httpResult = document.getElementById('http-result');
+  const httpReachable = document.getElementById('http-reachable');
+  const httpStatus = document.getElementById('http-status');
+  const httpTime = document.getElementById('http-time');
+
+  function setHttpHint(msg, kind) {
+    httpHint.textContent = msg || '';
+    httpHint.classList.toggle('error', kind === 'error');
+    httpHint.classList.toggle('warn', kind === 'warn');
+  }
+
+  async function checkHttp(url) {
+    try {
+      const t0 = performance.now();
+      const res = await fetch(url, { mode: 'cors', cache: 'no-store' });
+      return { reachable: true, opaque: false, status: res.status, ms: Math.round(performance.now() - t0) };
+    } catch (err1) {
+      try {
+        const t1 = performance.now();
+        await fetch(url, { mode: 'no-cors', cache: 'no-store' });
+        return { reachable: true, opaque: true, status: null, ms: Math.round(performance.now() - t1) };
+      } catch (err2) {
+        return { reachable: false, opaque: false, status: null, ms: null };
+      }
+    }
+  }
+
+  httpForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    let url = httpInput.value.trim();
+    if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+    httpInput.classList.remove('invalid');
+
+    const mixedContent = location.protocol === 'https:' && /^http:\/\//i.test(url);
+    setHttpHint('Checking…');
+    httpResult.classList.remove('show');
+
+    const r = await checkHttp(url);
+    httpReachable.textContent = r.reachable ? 'Yes' : 'No';
+    httpStatus.textContent = r.status !== null ? String(r.status) : (r.reachable ? 'Not readable (CORS-blocked response)' : '—');
+    httpTime.textContent = r.ms !== null ? r.ms + ' ms' : '—';
+    httpResult.classList.add('show');
+
+    if (mixedContent && !r.reachable) {
+      setHttpHint('This page is loaded over HTTPS and the target is plain HTTP — browsers block that outright (mixed content), regardless of whether the target is actually up.', 'warn');
+    } else if (!r.reachable) {
+      setHttpHint('No response — the target may be down, blocking this request, or unreachable from your network.', 'warn');
+    } else if (r.opaque) {
+      setHttpHint('Reached the server, but it doesn\'t allow cross-origin reads, so only reachability and rough timing are available — not the real status code.', 'warn');
+    } else {
+      setHttpHint('');
+    }
+  });
+
+  /* ---------------------------------------------------------------- */
+  /* Service Status ("Down Detector")                                  */
+  /* ---------------------------------------------------------------- */
+  const STATUS_SERVICES = [
+    { name: 'GitHub', url: 'https://www.githubstatus.com/api/v2/status.json', type: 'statuspage', link: 'https://www.githubstatus.com' },
+    { name: 'Cloudflare', url: 'https://www.cloudflarestatus.com/api/v2/status.json', type: 'statuspage', link: 'https://www.cloudflarestatus.com' },
+    { name: 'OpenAI', url: 'https://status.openai.com/api/v2/status.json', type: 'statuspage', link: 'https://status.openai.com' },
+    { name: 'Dropbox', url: 'https://status.dropbox.com/api/v2/status.json', type: 'statuspage', link: 'https://status.dropbox.com' },
+    { name: 'DigitalOcean', url: 'https://status.digitalocean.com/api/v2/status.json', type: 'statuspage', link: 'https://status.digitalocean.com' },
+    { name: 'Slack', url: 'https://slack-status.com/api/v2.0.0/current', type: 'slack', link: 'https://slack-status.com' },
+    { name: 'Datadog', url: 'https://status.datadoghq.com/api/v2/status.json', type: 'statuspage', link: 'https://status.datadoghq.com' },
+    { name: 'PagerDuty', url: 'https://status.pagerduty.com/api/v2/status.json', type: 'statuspage', link: 'https://status.pagerduty.com' },
+    { name: 'Atlassian', url: 'https://status.atlassian.com/api/v2/status.json', type: 'statuspage', link: 'https://status.atlassian.com' },
+    { name: 'New Relic', url: 'https://status.newrelic.com/api/v2/status.json', type: 'statuspage', link: 'https://status.newrelic.com' }
+  ];
+
+  let svcLoaded = false;
+
+  function svcTile(svc) {
+    const tile = document.createElement('div');
+    tile.className = 'svc-tile';
+    tile.innerHTML =
+      '<div class="svc-name"><a href="' + svc.link + '" target="_blank" rel="noopener">' + svc.name + '</a></div>' +
+      '<div class="svc-status"><span class="dot unknown"></span><span>Checking…</span></div>';
+    return tile;
+  }
+
+  function updateTile(tile, dotClass, text) {
+    const dot = tile.querySelector('.dot');
+    const label = tile.querySelector('.svc-status span:last-child');
+    dot.className = 'dot ' + dotClass;
+    label.textContent = text;
+  }
+
+  function parseStatuspage(data) {
+    const indicator = data.status && data.status.indicator;
+    const desc = (data.status && data.status.description) || 'Unknown';
+    if (indicator === 'none') return { dot: 'ok', text: desc };
+    if (indicator === 'minor' || indicator === 'maintenance') return { dot: 'minor', text: desc };
+    if (indicator === 'major' || indicator === 'critical') return { dot: 'major', text: desc };
+    return { dot: 'unknown', text: desc };
+  }
+
+  function parseSlack(data) {
+    if (data.status === 'ok') return { dot: 'ok', text: 'All Systems Operational' };
+    if (data.status === 'active') return { dot: 'major', text: (data.active_incidents && data.active_incidents.length) + ' active incident(s)' };
+    return { dot: 'minor', text: data.status || 'Unknown' };
+  }
+
+  function loadServiceStatuses() {
+    if (svcLoaded) return;
+    svcLoaded = true;
+    const grid = document.getElementById('svc-grid');
+    grid.innerHTML = '';
+    STATUS_SERVICES.forEach((svc) => {
+      const tile = svcTile(svc);
+      grid.appendChild(tile);
+      fetch(svc.url)
+        .then((res) => { if (!res.ok) throw new Error('status ' + res.status); return res.json(); })
+        .then((data) => {
+          const parsed = svc.type === 'slack' ? parseSlack(data) : parseStatuspage(data);
+          updateTile(tile, parsed.dot, parsed.text);
+        })
+        .catch(() => updateTile(tile, 'unknown', 'Unable to check'));
+    });
+  }
+})();
+</script>
+</body>
+</html>
