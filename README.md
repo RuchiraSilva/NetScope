@@ -1,6 +1,6 @@
 # NetScope — Free Network Support Toolkit
 
-**[Open NetScope →](https://YOUR-USERNAME.github.io/NetScope/)**
+**[Open NetScope →](https://ruchirasilva.github.io/NetScope/)**
 
 NetScope is a free, browser-based toolkit for network and support engineers troubleshooting connectivity issues — no install, no signup, no backend. Everything runs client-side and is hosted free on GitHub Pages.
 
