@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ruchirasilva.github.io/NetScope/sitemap.xml

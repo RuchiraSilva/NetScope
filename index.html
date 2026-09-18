@@ -3,7 +3,44 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Network Support Toolkit</title>
+
+<title>NetScope — Free Network Toolkit: MAC, IP, DNS/WHOIS, BGP &amp; Uptime Checks</title>
+<meta name="description" content="NetScope is a free, browser-based network toolkit for support and network engineers: MAC address vendor lookup, IP geolocation & reverse DNS, DNS record & WHOIS/RDAP lookup, BGP/ASN routing info, HTTP reachability checks, and live service status monitoring — no install, no signup." />
+<meta name="keywords" content="MAC address lookup, MAC vendor lookup, OUI lookup, IP address lookup, reverse DNS lookup, DNS lookup tool, WHOIS lookup, RDAP lookup, BGP lookup, ASN lookup, network troubleshooting tool, is it down, service status checker, network support tools" />
+<meta name="author" content="NetScope" />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://ruchirasilva.github.io/NetScope/" />
+
+<!-- Open Graph / Facebook / LinkedIn -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://ruchirasilva.github.io/NetScope/" />
+<meta property="og:title" content="NetScope — Free Network Support Toolkit" />
+<meta property="og:description" content="MAC vendor lookup, IP & DNS lookup, WHOIS/RDAP, BGP/ASN, HTTP reachability, and live service status — all in your browser, free." />
+<meta property="og:image" content="https://ruchirasilva.github.io/NetScope/og-image.png" />
+<meta property="og:site_name" content="NetScope" />
+
+<!-- Twitter / X Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="NetScope — Free Network Support Toolkit" />
+<meta name="twitter:description" content="MAC vendor lookup, IP & DNS lookup, WHOIS/RDAP, BGP/ASN, HTTP reachability, and live service status — all in your browser, free." />
+<meta name="twitter:image" content="https://ruchirasilva.github.io/NetScope/og-image.png" />
+
+<meta name="theme-color" content="#a45a2a" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%23a45a2a'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%23fff8f0' font-family='Arial, sans-serif' font-weight='bold'%3EN%3C/text%3E%3C/svg%3E" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "NetScope",
+  "url": "https://ruchirasilva.github.io/NetScope/",
+  "description": "Free browser-based network toolkit: MAC address vendor lookup, IP geolocation & reverse DNS, DNS record & WHOIS/RDAP lookup, BGP/ASN routing info, HTTP reachability checks, and live service status monitoring.",
+  "applicationCategory": "NetworkingApplication",
+  "operatingSystem": "Any (web browser)",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+
 <style>
   :root {
     --paper: #eef1ec;
@@ -30,6 +67,10 @@
   }
 
   .sheet { width: 100%; max-width: 680px; }
+
+  .site-header { text-align: center; margin-bottom: 18px; }
+  .site-header h1 { font-size: 26px; font-weight: 700; margin: 0 0 6px; letter-spacing: 0.01em; color: var(--ink); }
+  .site-tagline { font-size: 13px; color: #5c6a61; margin: 0; line-height: 1.5; max-width: 520px; margin-left: auto; margin-right: auto; }
 
   .tabs {
     display: flex;
@@ -78,7 +119,7 @@
   .panel { display: none; }
   .panel.active { display: block; }
 
-  h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; letter-spacing: 0.01em; }
+  h2 { font-size: 22px; font-weight: 600; margin: 0 0 4px; letter-spacing: 0.01em; }
   .sub { font-size: 14px; color: #5c6a61; margin: 0 0 24px; line-height: 1.5; }
 
   form { display: flex; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
@@ -187,12 +228,45 @@
   .info-card a { color: var(--copper-dark); }
   .info-card strong { color: var(--ink); }
 
+  .dd-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #fbfcfa;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 14px 16px;
+    text-decoration: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .dd-card:hover { border-color: var(--copper); background: #fdf7f0; }
+  .dd-card-icon {
+    flex-shrink: 0;
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    background: var(--copper);
+    color: #fff8f0;
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .dd-card-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .dd-card-title { font-size: 14.5px; font-weight: 600; color: var(--ink); }
+  .dd-card-sub { font-size: 12px; color: #7c887f; }
+
   footer { margin-top: 20px; font-size: 12px; color: #8a948a; text-align: center; line-height: 1.6; }
   footer a { color: var(--copper-dark); }
 </style>
 </head>
 <body>
   <div class="sheet">
+    <header class="site-header">
+      <h1>NetScope</h1>
+      <p class="site-tagline">Free browser-based network toolkit — MAC vendor lookup, IP &amp; DNS lookup, WHOIS, BGP/ASN, HTTP reachability, and service status checks for network &amp; support engineers.</p>
+    </header>
     <div class="tabs">
       <button class="tab-btn active" id="tab-btn-mac" type="button">MAC Vendor</button>
       <button class="tab-btn" id="tab-btn-ip" type="button">IP Address</button>
@@ -206,7 +280,7 @@
 
       <!-- ============ MAC VENDOR PANEL ============ -->
       <div class="panel active" id="panel-mac">
-        <h1>MAC Vendor Lookup</h1>
+        <h2>MAC Vendor Lookup</h2>
         <p class="sub">Enter a MAC address to identify the manufacturer registered against its OUI (the first three octets).</p>
 
         <form id="mac-form" autocomplete="off">
@@ -228,7 +302,7 @@
 
       <!-- ============ IP ADDRESS PANEL ============ -->
       <div class="panel" id="panel-ip">
-        <h1>IP Address Lookup</h1>
+        <h2>IP Address Lookup</h2>
         <p class="sub">Enter an IPv4 or IPv6 address for geolocation, network ownership, reverse DNS, and spam-blacklist status.</p>
 
         <form id="ip-form" autocomplete="off">
@@ -257,7 +331,7 @@
 
       <!-- ============ DNS / WHOIS PANEL ============ -->
       <div class="panel" id="panel-domain">
-        <h1>DNS &amp; Domain (RDAP/WHOIS) Lookup</h1>
+        <h2>DNS &amp; Domain (RDAP/WHOIS) Lookup</h2>
         <p class="sub">Enter a domain to query a DNS record type and pull its registration data.</p>
 
         <form id="domain-form" autocomplete="off">
@@ -291,7 +365,7 @@
 
       <!-- ============ BGP / ASN PANEL ============ -->
       <div class="panel" id="panel-bgp">
-        <h1>BGP / ASN Lookup</h1>
+        <h2>BGP / ASN Lookup</h2>
         <p class="sub">Enter an IP address or ASN (e.g. AS15169) to see routing/ownership info and an abuse contact, via RIPEstat.</p>
 
         <form id="bgp-form" autocomplete="off">
@@ -315,7 +389,7 @@
 
       <!-- ============ HTTP CHECK PANEL ============ -->
       <div class="panel" id="panel-http">
-        <h1>HTTP Reachability &amp; Latency</h1>
+        <h2>HTTP Reachability &amp; Latency</h2>
         <p class="sub">Checks whether a URL is reachable from your browser right now, and roughly how long it takes to respond.</p>
 
         <form id="http-form" autocomplete="off">
@@ -333,16 +407,33 @@
 
       <!-- ============ SERVICE STATUS PANEL ============ -->
       <div class="panel" id="panel-status">
-        <h1>Service Status ("Is it down?")</h1>
+        <h2>Service Status ("Is it down?")</h2>
         <p class="sub">Live status pulled directly from each provider's own public status page API.</p>
 
         <div class="svc-grid" id="svc-grid"></div>
 
         <div style="margin-top:24px; border-top:1px solid var(--line); padding-top:20px;">
+          <span class="label" style="display:block; margin-bottom:4px;">Everyday consumer services</span>
+          <p style="font-size:12.5px; color:#7c887f; line-height:1.5; margin:0 0 12px;">
+            YouTube, Facebook, WhatsApp, Netflix, etc. don't publish an official status API the way dev-tool
+            companies do. Each tile below instead tests whether <em>your own browser/network</em> can reach
+            the service right now, and links directly to its Downdetector page for the wider picture.
+          </p>
+          <a href="https://downdetector.com" target="_blank" rel="noopener" class="dd-card">
+            <span class="dd-card-icon">DD</span>
+            <span class="dd-card-body">
+              <span class="dd-card-title">Downdetector</span>
+              <span class="dd-card-sub">Crowd-sourced outage reports for thousands of services — check the full picture →</span>
+            </span>
+          </a>
+          <div class="svc-grid" id="svc-grid-consumer" style="margin-top:14px;"></div>
+        </div>
+
+        <div style="margin-top:24px; border-top:1px solid var(--line); padding-top:20px;">
           <div class="field" style="display:block; border-bottom:none; padding-top:0;">
             <span class="label" style="display:block; margin-bottom:8px;">Subsea cable outages</span>
             <div class="info-card">
-              Here are some sources you can use to check subsea cable status :
+              Here are some sources you can use to check subsea cable status:
               <br /><br />
               <strong>TeleGeography Submarine Cable Map</strong> — reference map of global cable routes: <a href="https://www.submarinecablemap.com" target="_blank" rel="noopener">submarinecablemap.com</a><br />
               <strong>Cloudflare Radar Outage Center</strong> — tracks significant internet disruptions, including some cable-related events: <a href="https://radar.cloudflare.com/outage-center" target="_blank" rel="noopener">radar.cloudflare.com/outage-center</a><br />
@@ -1099,6 +1190,51 @@
           updateTile(tile, parsed.dot, parsed.text);
         })
         .catch(() => updateTile(tile, 'unknown', 'Unable to check'));
+    });
+    loadConsumerStatuses();
+  }
+
+  /* Everyday consumer services — no official status API exists for these,
+     so each tile is a live reachability probe from this browser, with a
+     direct link to the service's own Downdetector page for the fuller picture. */
+  const CONSUMER_SERVICES = [
+    { name: 'YouTube', probeUrl: 'https://www.youtube.com/', ddSlug: 'youtube' },
+    { name: 'Facebook', probeUrl: 'https://www.facebook.com/', ddSlug: 'facebook' },
+    { name: 'WhatsApp', probeUrl: 'https://web.whatsapp.com/', ddSlug: 'whatsapp' },
+    { name: 'Instagram', probeUrl: 'https://www.instagram.com/', ddSlug: 'instagram' },
+    { name: 'Netflix', probeUrl: 'https://www.netflix.com/', ddSlug: 'netflix' },
+    { name: 'X (Twitter)', probeUrl: 'https://x.com/', ddSlug: 'twitter' },
+    { name: 'TikTok', probeUrl: 'https://www.tiktok.com/', ddSlug: 'tiktok' },
+    { name: 'Amazon', probeUrl: 'https://www.amazon.com/', ddSlug: 'amazon' }
+  ];
+
+  let consumerLoaded = false;
+
+  function consumerTile(svc) {
+    const tile = document.createElement('div');
+    tile.className = 'svc-tile';
+    tile.innerHTML =
+      '<div class="svc-name">' + svc.name + '</div>' +
+      '<div class="svc-status"><span class="dot unknown"></span><span>Checking…</span></div>' +
+      '<div style="margin-top:6px;"><a href="https://downdetector.com/status/' + svc.ddSlug + '/" target="_blank" rel="noopener" style="font-size:11px; color:var(--copper-dark);">Check on Downdetector ↗</a></div>';
+    return tile;
+  }
+
+  function probeReachable(url) {
+    return fetch(url, { mode: 'no-cors', cache: 'no-store' }).then(() => true).catch(() => false);
+  }
+
+  function loadConsumerStatuses() {
+    if (consumerLoaded) return;
+    consumerLoaded = true;
+    const grid = document.getElementById('svc-grid-consumer');
+    grid.innerHTML = '';
+    CONSUMER_SERVICES.forEach((svc) => {
+      const tile = consumerTile(svc);
+      grid.appendChild(tile);
+      probeReachable(svc.probeUrl).then((ok) => {
+        updateTile(tile, ok ? 'ok' : 'major', ok ? 'Reachable from here' : 'Not reachable from here');
+      });
     });
   }
 })();
